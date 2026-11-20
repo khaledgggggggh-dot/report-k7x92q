@@ -49,6 +49,7 @@ button:disabled{opacity:.5}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:20px 30px}.kv small{display:block;color:#d4a73a;font-size:16px;letter-spacing:3px;font-weight:700}.kv b{font-size:25px}
 .pill{background:#d4a73a;color:#14161c;border-radius:30px;text-align:center;padding:12px;margin-top:14px}.pill small{display:block;letter-spacing:4px;font-weight:700;font-size:17px}.pill b{font-size:44px}
 #gate{position:fixed;inset:0;z-index:99;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}#gate div{max-width:340px;width:100%;text-align:center}#gate input{margin:14px 0;text-align:center}#gate p{color:#c0392b;min-height:20px;font-size:13px}
+.cols{display:grid;grid-auto-flow:column;column-gap:34px}.cols .li{font-size:19px;padding:13px 0;min-width:0}.cols .li em{margin-right:10px}.cols .li s{font-size:14px;padding-left:8px}
 </style></head><body><div id="gate"><div><h1>Field Visit Report</h1><input type="text" id="pw" placeholder="Password" autocomplete="off" autocapitalize="off" style="-webkit-text-security:disc"><button id="pwgo">Open</button><p id="pwe"></p></div></div><main style="display:none" id="app">
 <h1>Field Visit Report System</h1>
 
@@ -117,7 +118,7 @@ function pages(){
  <div class="g2"><div class="box"><div class="lab">TOTAL TICKETS</div><div class="big">${Number($('tt').value||0).toLocaleString('en-US')}</div></div><div class="box"><div class="lab">PAID TICKETS</div><div class="big" style="color:#d4a73a">${Number($('pt').value||0).toLocaleString('en-US')}</div></div></div>
  <div class="box" style="margin-bottom:14px"><div class="lab">VENUES VISITED</div><div class="big">${shops.length}</div><div style="text-align:center;color:#8d98b8;font-size:19px">shops · ${esc(ev)} · ${esc(zn)}</div></div>
  <div class="box" style="padding:20px 30px"><b style="font-size:25px">Venues by type</b>${ent.map(([k,v],i)=>`<div class="bar"><span>${esc(k)}</span><div class="${i?'':'f'}" style="width:${Math.round(v/mx*410)}px"></div><b>${v}</b></div>`).join('')}</div>
- <div class="sec" style="margin-top:22px"><i class="b"></i>SHOP LIST</div><div class="box" style="padding:12px 28px">${shops.map((s,i)=>`<div class="li"><span><em>${String(i+1).padStart(2,'0')}</em>${esc(s.name)}</span><s>${esc(s.rev)}</s></div>`).join('')}</div></div></div>`);
+ <div class="sec" style="margin-top:22px"><i class="b"></i>SHOP LIST</div><div class="box cols" style="padding:12px 28px;grid-template-rows:repeat(${Math.ceil(shops.length/2)},auto)">${shops.map((s,i)=>`<div class="li"><span><em>${String(i+1).padStart(2,'0')}</em>${esc(s.name)}</span><s>${esc(s.rev)}</s></div>`).join('')}</div></div></div>`);
  shops.forEach((s,i)=>{
   const ph=s.photos.length?`<div class="photo">${s.photos.map(p=>`<div style="background-image:url(${p})"></div>`).join('')}</div>`:`<div class="photo none">No photo submitted</div>`;
   const kv=[['REVENUE TYPE',s.rev],['SHOP TYPE',s.shopType],['ACTIVITY TYPE',s.act],['SALES START',s.start]];
@@ -128,7 +129,7 @@ function pages(){
  return out}
 
 $('go').onclick=async()=>{
- $('go').disabled=true;const m=$('msg2');
+ $('go').disabled=true;const m=$('msg2');m.textContent='Starting…';
  try{await ensureLibs();
   if(typeof html2canvas==='undefined'||!window.jspdf)throw new Error('PDF libraries failed to load. Check your internet connection and reload.');
   const st=$('stage');st.innerHTML=pages().join('');
@@ -142,7 +143,7 @@ $('go').onclick=async()=>{
   const fn=`Field_Visit_Report_${$('rd').value||'report'}.pdf`;
   const dl=(window.claude&&claude.use)?await claude.use('downloads'):null;
   if(dl){await dl.save({filename:fn,data:new Uint8Array(buf)})}
-  else{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/pdf'}));a.download=fn;document.body.appendChild(a);a.click();a.remove()}
+  else{const u=URL.createObjectURL(new Blob([buf],{type:'application/pdf'}));m.innerHTML='Done ✓ <a href="'+u+'" download="'+fn+'" target="_blank" style="display:block;margin-top:10px;padding:14px;background:#d4a73a;color:#111;border-radius:10px;text-align:center;font-weight:700;text-decoration:none">Tap here to open / save the PDF</a>';return}
   m.textContent='Done ✓'
  }catch(e){m.textContent=e&&e.code==='declined'?'Download cancelled.':'Error: '+(e.message||e.code)}
  finally{$('go').disabled=false;$('stage').innerHTML=''}};
