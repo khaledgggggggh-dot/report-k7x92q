@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Field Visit Report System</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="window.__f=(window.__f||[]).concat('x')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" onerror="window.__f=(window.__f||[]).concat('h')"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" onerror="window.__f=(window.__f||[]).concat('p')"></script>
+<style>
+:root{--bg:#f6f6f3;--card:#fff;--tx:#1a1a1a;--mu:#6b6b66;--bd:#e0dfd8;--gold:#d4a73a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15161a;--card:#1f2026;--tx:#f0f0ea;--mu:#9a9a94;--bd:#33343c}}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:inherit}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 "Noto Sans Arabic",Arial,sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:8px 0 14px}h2{font-size:15px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:12px;color:var(--mu);margin:8px 0 3px}
+input[type=text],input[type=number],input[type=date]{width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx);font:inherit}
+input[type=file]{width:100%;font-size:13px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{background:var(--gold);color:#111;border:0;border-radius:10px;padding:12px 16px;font:700 15px inherit;font-family:inherit;width:100%;cursor:pointer}
+button:disabled{opacity:.5}
+.shop{border-top:1px solid var(--bd);padding:10px 0}.shop:first-of-type{border-top:0}
+.shop b{display:block}.shop small{color:var(--mu)}
+.thumbs{display:flex;gap:6px;margin-top:6px}.thumbs img{width:56px;height:56px;object-fit:cover;border-radius:6px}
+#msg{font-size:13px;color:var(--mu);margin-top:8px}
+#stage{position:absolute;left:-99999px;top:0}
+/* PDF pages */
+.pg{width:825px;height:1456px;position:relative;overflow:hidden;background:#070a12;color:#fff;font-family:"Noto Sans Arabic",Arial,sans-serif}
+.pg .bgimg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.28;filter:blur(14px)}
+.pg .frame{position:absolute;left:43px;top:51px;right:43px;bottom:51px;border:2px solid #d4a73a;border-radius:70px;background:rgba(8,12,24,.72);padding:40px 36px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:13px;font-weight:700;letter-spacing:2px;color:#fff}
+.date{background:#d4a73a;color:#14161c;font-weight:700;font-size:25px;border-radius:30px;padding:10px 42px}
+.sec{display:flex;align-items:center;gap:14px;font-weight:700;font-size:27px;margin:34px 0 14px}
+.sec i{width:8px;height:40px;border-radius:4px;background:#d4a73a}.sec i.b{background:#9bb0dc}
+.box{background:#0e1526;border:1px solid #22304f;border-radius:30px;padding:24px}
+.lab{color:#d4a73a;font-size:17px;letter-spacing:4px;font-weight:700;text-align:center}
+.big{font-size:70px;font-weight:700;text-align:center;line-height:1.1}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.bar{display:flex;align-items:center;gap:14px;margin:10px 0;font-size:21px}.bar span:first-child{width:110px;text-align:right;color:#c9d0e4}
+.bar div{height:32px;border-radius:8px;background:#7f8bb8}.bar div.f{background:#d4a73a}.bar b{margin-left:4px}
+.li{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #22304f;font-size:22px}
+.li:last-child{border:0}.li em{color:#d4a73a;font-style:normal;font-weight:700;margin-right:20px}.li s{text-decoration:none;color:#8d98b8;font-size:19px}
+.photo{border-radius:24px;overflow:hidden;height:640px;display:flex;gap:12px;background:#0e1526;border:1px solid #22304f;padding:14px}
+.photo div{flex:1;background-size:cover;background-position:center;border-radius:16px}
+.photo.none{align-items:center;justify-content:center;border:2px dashed #3a4868;color:#8d98b8;font-size:24px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:20px 30px}.kv small{display:block;color:#d4a73a;font-size:16px;letter-spacing:3px;font-weight:700}.kv b{font-size:25px}
+.pill{background:#d4a73a;color:#14161c;border-radius:30px;text-align:center;padding:12px;margin-top:14px}.pill small{display:block;letter-spacing:4px;font-weight:700;font-size:17px}.pill b{font-size:44px}
+#gate{position:fixed;inset:0;z-index:99;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}#gate div{max-width:340px;width:100%;text-align:center}#gate input{margin:14px 0;text-align:center}#gate p{color:#c0392b;min-height:20px;font-size:13px}
+</style></head><body><div id="gate"><div><h1>Field Visit Report</h1><input type="text" id="pw" placeholder="Password" autocomplete="off" autocapitalize="off" style="-webkit-text-security:disc"><button id="pwgo">Open</button><p id="pwe"></p></div></div><main style="display:none" id="app">
+<h1>Field Visit Report System</h1>
+
+<div class="card"><h2>1 · Upload Excel</h2>
+<input type="file" id="xl">
+<div id="msg">Use the Excel export (same columns as your file).</div></div>
+
+<div class="card"><h2>2 · Event info</h2>
+<div class="row"><div><label>Total tickets</label><input type="number" id="tt"></div><div><label>Paid tickets</label><input type="number" id="pt"></div></div>
+<div class="row"><div><label>Report date</label><input type="date" id="rd"></div><div><label>Event name</label><input type="text" id="ev"></div></div>
+<div class="row"><div><label>Zone</label><input type="text" id="zn"></div><div><label>Background image (new each day)</label><input type="file" id="bg" accept="image/*"></div></div></div>
+
+<div class="card"><h2>3 · Photos per shop</h2><div id="shops"><small style="color:var(--mu)">Upload the Excel first.</small></div></div>
+
+<button id="go" disabled>Generate PDF</button>
+<div id="msg2" style="font-size:13px;color:var(--mu);margin-top:8px"></div>
+</main><div id="stage"></div>
+<script>
+const $=id=>document.getElementById(id);
+function loadJs(u){return new Promise(r=>{const s=document.createElement('script');s.src=u;s.onload=()=>r(true);s.onerror=()=>r(false);document.head.appendChild(s)})}
+async function ensureLibs(){
+ if(typeof XLSX==='undefined')await loadJs('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+ if(typeof html2canvas==='undefined')await loadJs('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js');
+ if(!window.jspdf)await loadJs('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js');
+}
+let shops=[],bgUrl='';
+const typeMap=v=>{v=String(v||'').trim();if(/retial|retail/i.test(v))return'Retail';if(/skill/i.test(v))return'Skill Games';return v};
+const fd=s=>{if(!s)return'';const m=String(s).match(/(\d{4})-(\d{2})-(\d{2})/);return m?`${m[3]}-${m[2]}-${m[1]}`:String(s)};
+const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function readImg(file,max=1400){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const k=Math.min(1,max/Math.max(i.width,i.height));const c=document.createElement('canvas');c.width=i.width*k;c.height=i.height*k;c.getContext('2d').drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85))};i.src=r.result};r.readAsDataURL(file)})}
+
+$('xl').onchange=async e=>{
+ try{const f=e.target.files[0];if(!f)return;
+ $('msg').textContent='Reading '+f.name+'…';
+ await ensureLibs();
+ if(typeof XLSX==='undefined')throw new Error('Excel reader failed to load. Check your internet connection and reload.');
+ const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});
+ const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+ shops=rows.filter(r=>r['Shop Name']).map(r=>({name:r['Shop Name'],rev:typeMap(r['Revenue Type']),shopType:r['Shop Description'],act:r['Activity Type'],start:fd(r['Sales Start Date']),acts:r['Number of Activities'],readers:r['Number of Readers'],comments:r['Comments'],photos:[]}));
+ const r0=rows[0]||{};
+ $('ev').value=r0['Main Event Name']||'';$('zn').value=r0['Zone']||'';
+ const m=String(r0['Sales Start Date']||'').match(/\d{4}-\d{2}-\d{2}/);if(m)$('rd').value=m[0];
+ $('msg').textContent=shops.length+' shops loaded.';renderShops();$('go').disabled=!shops.length;
+ }catch(err){$('msg').textContent='Could not read file: '+err.message}};
+
+function renderShops(){
+ $('shops').innerHTML='';
+ shops.forEach((s,i)=>{const d=document.createElement('div');d.className='shop';
+  d.innerHTML=`<b>${String(i+1).padStart(2,'0')} · ${esc(s.name)}</b><small>${esc(s.rev)} · ${esc(s.shopType)}</small><input type="file" accept="image/*" multiple><div class="thumbs"></div>`;
+  d.querySelector('input').onchange=async e=>{s.photos=[];for(const f of [...e.target.files].slice(0,2))s.photos.push(await readImg(f));
+   d.querySelector('.thumbs').innerHTML=s.photos.map(p=>`<img src="${p}">`).join('')};
+  $('shops').appendChild(d)})}
+
+$('bg').onchange=async e=>{if(e.target.files[0])bgUrl=await readImg(e.target.files[0],1600)};
+
+function pages(){
+ const date=fd($('rd').value),ev=$('ev').value.trim()||'EVENT',zn=$('zn').value.trim(),sub=(ev+' · '+zn).toUpperCase();
+ const bgs=bgUrl?`<div class="bgimg" style="background-image:url(${bgUrl})"></div>`:'';
+ const head=`<div class="top"><span class="logo">RIYADH SEASON</span><span class="date">${date}</span></div>`;
+ const out=[];
+ out.push(`<div class="pg">${bgUrl?`<div style="position:absolute;inset:0;background:url(${bgUrl}) center/cover"></div>`:''}<div style="position:absolute;left:0;right:0;bottom:0;height:520px;background:linear-gradient(transparent,#070a12 35%)"></div>
+ <div style="position:absolute;left:0;right:0;bottom:150px;text-align:center"><div style="font-size:54px;font-weight:700;letter-spacing:4px"><span style="color:#d4a73a">FIELD VISIT</span> REPORT</div><div style="color:#c9d0e4;letter-spacing:6px;font-size:22px;margin:22px 0 36px">${esc(sub)}</div><span class="date">${date}</span></div></div>`);
+ const types={};shops.forEach(s=>types[s.rev]=(types[s.rev]||0)+1);
+ const ent=Object.entries(types).sort((a,b)=>b[1]-a[1]),mx=ent[0]?ent[0][1]:1;
+ out.push(`<div class="pg">${bgs}<div class="frame">${head}<div class="sec"><i></i>OVERVIEW</div>
+ <div class="g2"><div class="box"><div class="lab">TOTAL TICKETS</div><div class="big">${Number($('tt').value||0).toLocaleString('en-US')}</div></div><div class="box"><div class="lab">PAID TICKETS</div><div class="big" style="color:#d4a73a">${Number($('pt').value||0).toLocaleString('en-US')}</div></div></div>
+ <div class="box" style="margin-bottom:14px"><div class="lab">VENUES VISITED</div><div class="big">${shops.length}</div><div style="text-align:center;color:#8d98b8;font-size:19px">shops · ${esc(ev)} · ${esc(zn)}</div></div>
+ <div class="box" style="padding:20px 30px"><b style="font-size:25px">Venues by type</b>${ent.map(([k,v],i)=>`<div class="bar"><span>${esc(k)}</span><div class="${i?'':'f'}" style="width:${Math.round(v/mx*410)}px"></div><b>${v}</b></div>`).join('')}</div>
+ <div class="sec" style="margin-top:22px"><i class="b"></i>SHOP LIST</div><div class="box" style="padding:12px 28px">${shops.map((s,i)=>`<div class="li"><span><em>${String(i+1).padStart(2,'0')}</em>${esc(s.name)}</span><s>${esc(s.rev)}</s></div>`).join('')}</div></div></div>`);
+ shops.forEach((s,i)=>{
+  const ph=s.photos.length?`<div class="photo">${s.photos.map(p=>`<div style="background-image:url(${p})"></div>`).join('')}</div>`:`<div class="photo none">No photo submitted</div>`;
+  const kv=[['REVENUE TYPE',s.rev],['SHOP TYPE',s.shopType],['ACTIVITY TYPE',s.act],['SALES START',s.start]];
+  if(s.comments)kv.push(['COMMENTS',s.comments]);
+  out.push(`<div class="pg">${bgs}<div class="frame">${head}<div class="sec"><i class="b"></i>${String(i+1).padStart(2,'0')} · ${esc(s.name)}</div>${ph}
+  <div class="sec"><i class="b"></i>DETAILS</div><div class="box"><div class="kv">${kv.map(([k,v])=>`<div><small>${k}</small><b>${esc(v)}</b></div>`).join('')}</div></div>
+  ${s.readers!==''?`<div class="pill"><small>READERS</small><b>${esc(s.readers)}</b></div>`:''}${s.acts!==''?`<div class="pill"><small>ACTIVITIES</small><b>${esc(s.acts)}</b></div>`:''}</div></div>`)});
+ return out}
+
+$('go').onclick=async()=>{
+ $('go').disabled=true;const m=$('msg2');
+ try{await ensureLibs();
+  if(typeof html2canvas==='undefined'||!window.jspdf)throw new Error('PDF libraries failed to load. Check your internet connection and reload.');
+  const st=$('stage');st.innerHTML=pages().join('');
+  await document.fonts.ready;
+  const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'px',format:[825,1456],orientation:'portrait',hotfixes:['px_scaling']});
+  const els=[...st.children];
+  for(let i=0;i<els.length;i++){m.textContent=`Rendering page ${i+1} of ${els.length}…`;
+   const c=await html2canvas(els[i],{scale:1.5,useCORS:true,backgroundColor:'#070a12'});
+   if(i)pdf.addPage([825,1456],'portrait');pdf.addImage(c.toDataURL('image/jpeg',.88),'JPEG',0,0,825,1456)}
+  const buf=pdf.output('arraybuffer');
+  const fn=`Field_Visit_Report_${$('rd').value||'report'}.pdf`;
+  const dl=(window.claude&&claude.use)?await claude.use('downloads'):null;
+  if(dl){await dl.save({filename:fn,data:new Uint8Array(buf)})}
+  else{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/pdf'}));a.download=fn;document.body.appendChild(a);a.click();a.remove()}
+  m.textContent='Done ✓'
+ }catch(e){m.textContent=e&&e.code==='declined'?'Download cancelled.':'Error: '+(e.message||e.code)}
+ finally{$('go').disabled=false;$('stage').innerHTML=''}};
+</script><script>
+(function(){const H="64da374dc81dae08325db1a730316ca823e2f9ed198118d112ce420e1d6f5bf8";
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function open(){document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block'}
+try{if(sessionStorage.getItem('ok')===H)open()}catch(e){}
+async function tryPw(){const v=document.getElementById('pw').value.trim();if(await sha(v)===H){try{sessionStorage.setItem('ok',H)}catch(e){}open()}else document.getElementById('pwe').textContent='Wrong password'}
+document.getElementById('pwgo').onclick=tryPw;document.getElementById('pw').onkeydown=e=>{if(e.key==='Enter')tryPw()};
+})();
+</script>
+</body></html>
