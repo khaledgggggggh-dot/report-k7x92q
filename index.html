@@ -128,12 +128,27 @@ function pages(){
   ${s.readers!==''?`<div class="pill"><small>READERS</small><b>${esc(s.readers)}</b></div>`:''}${s.acts!==''?`<div class="pill"><small>ACTIVITIES</small><b>${esc(s.acts)}</b></div>`:''}</div></div>`)});
  return out}
 
+function arabicToImg(root){
+ const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[];
+ while(w.nextNode()){if(/[\u0600-\u06FF]/.test(w.currentNode.nodeValue))nodes.push(w.currentNode)}
+ nodes.forEach(n=>{
+  const p=n.parentElement,cs=getComputedStyle(p),size=parseFloat(cs.fontSize),k=3,txt=n.nodeValue.trim();
+  const c=document.createElement('canvas'),x=c.getContext('2d');
+  x.font=`${cs.fontWeight} ${size*k}px ${cs.fontFamily}`;
+  const wd=Math.ceil(x.measureText(txt).width)+4,ht=Math.ceil(size*k*1.5);
+  c.width=wd;c.height=ht;
+  x.font=`${cs.fontWeight} ${size*k}px ${cs.fontFamily}`;x.fillStyle=cs.color;x.textBaseline='middle';x.fillText(txt,2,ht/2);
+  const im=document.createElement('img');im.src=c.toDataURL('image/png');
+  im.style.cssText=`width:${wd/k}px;height:${ht/k}px;display:inline-block;vertical-align:middle`;
+  p.replaceChild(im,n)})}
 $('go').onclick=async()=>{
  $('go').disabled=true;const m=$('msg2');m.textContent='Starting…';
  try{await ensureLibs();
   if(typeof html2canvas==='undefined'||!window.jspdf)throw new Error('PDF libraries failed to load. Check your internet connection and reload.');
   const st=$('stage');st.innerHTML=pages().join('');
   await document.fonts.ready;
+  try{await document.fonts.load('400 20px "Noto Sans Arabic"','ع');await document.fonts.load('700 20px "Noto Sans Arabic"','ع')}catch(e){}
+  arabicToImg(st);
   const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'px',format:[825,1456],orientation:'portrait',hotfixes:['px_scaling']});
   const els=[...st.children];
   for(let i=0;i<els.length;i++){m.textContent=`Rendering page ${i+1} of ${els.length}…`;
